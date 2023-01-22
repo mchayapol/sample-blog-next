@@ -1,6 +1,7 @@
 import { Schema, models, model } from 'mongoose';
 
-interface IBlog {
+export interface IBlog {
+  _id: string;
   topic: string;
   content: string;
   author: string;

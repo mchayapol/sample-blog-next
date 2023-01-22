@@ -4,22 +4,24 @@ import { Inter } from '@next/font/google'
 import styles from '@/styles/Home.module.css'
 import { useQuery, dehydrate, QueryClient } from '@tanstack/react-query';
 import { getBlogs } from './api/blogs';
+// TODO this should go to @types
+import { IBlog } from '../db/models/blog';
 
 const inter = Inter({ subsets: ['latin'] })
 
 
-export default function Home({ blogs }) {
+export default function Home() {
   const { data, isLoading } = useQuery(['blogs'], getBlogs);
   // console.debug('data', data)
 
   if (isLoading) return <>Loading</>
 
   // console.log('blogs', blogs)
-  const blogList = data.map((blog) => (
+  const blogList = data.map((blog:IBlog) => (
     <a
       key={blog._id}
       className={styles.card}
-      href={`/api/blogs/${blog._id}`}      
+      href={`/api/blogs/${blog._id}`}
       rel="noopener noreferrer"
     >
 
@@ -84,7 +86,7 @@ export default function Home({ blogs }) {
     </>
   )
 }
-async function getServerSideProps(context) {
+async function getServerSideProps() {
   const queryClient = new QueryClient()
 
   // prefetch data on the server

@@ -1,19 +1,17 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from 'next'
-import axios from 'axios'
-import { models, connect } from 'mongoose';
+import { connect } from 'mongoose';
 import { env } from 'process'
-import Blog from '../../../db/models/blog';
-
-
+import Blog, { IBlog } from '../../../db/models/blog';
 
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<Data>
+  res: NextApiResponse<IBlog | Error>
 ) {
 
   try {
+    if (!env.MONGODB_URI) throw new Error("MONGODB_URI is not defined");
     connect(env.MONGODB_URI);
     const { id } = req.query
 
@@ -30,11 +28,17 @@ export default async function handler(
       res.status(200).send(deletedBlog);
 
     } else {
-      res.status(400).json({ message: 'Method not supported' })
+      res.status(400).send(new Error('Method not supported'))
     }
-  } catch (error) {
-    console.error(error);
-    res.status(500).send(error);
-
+  } catch (e) {
+    console.error(e);
+    if (typeof e === "string") {
+      e.toUpperCase() // works, `e` narrowed to string
+      res.status(500).send(new Error(e));
+    } else if (e instanceof Error) {
+      res.status(500).send(new Error(e.message));
+    } else {
+      res.status(500).send(new Error("Internal Server Error"));
+    }
   }
 }
