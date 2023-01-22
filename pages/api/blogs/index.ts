@@ -6,11 +6,13 @@ import { env } from 'process'
 import Blog from '../../../db/models/blog';
 
 
+export async function getBlog(id) {
+  const { data: blog } = await axios.get(`/api/blog/${id}`)
+  return blog
+}
+
 export async function getBlogs() {
-  // console.debug(`axios.get ${process.env.NEXT_PUBLIC_API_URL}/blogs`)
-  // const { data: blogs } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/blogs`)
   const { data: blogs } = await axios.get(`/api/blogs`)
-  // console.debug('getBlogs', blogs)
   return blogs
 }
 
@@ -18,7 +20,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Data>
 ) {
-  // console.log(req.method)
+  console.log("req.method",req.method)
   // console.log(models)
   // console.log(Blog)
 
@@ -27,15 +29,29 @@ export default async function handler(
     connect(env.MONGODB_URI);
 
     if (req.method == 'GET') {
+      // List all blogs
       const blogs = await Blog.find()
       res.status(200).send(blogs);
+
+    } else if (req.method == 'POST') {
+      // Create a new blog
+      const newBlog = new Blog(req.body);
+      newBlog.save();
+      console.log("New Blog", newBlog);
+      res.status(200).send(newBlog);
+
+    } else if (req.method == 'PUT') {
+      // Update a blog
+      const updatedBlog = await Blog.findByIdAndUpdate(req.body._id, req.body);
+      console.log("Updated Blog", updatedBlog);
+      res.status(200).send(updatedBlog);
 
     } else {
       res.status(400).json({ message: 'Method not supported' })
     }
   } catch (error) {
-    console.error(err);
-    res.status(500).send(err);
+    console.error(error);
+    res.status(500).send(error);
 
   }
 }
